@@ -1,0 +1,61 @@
+# Nature MI figure style — sole source for every figure rule.
+# src/brd4kan/viz/style.py reads this; tests/test_style.py validates it.
+
+format: svg
+
+font:
+  family: serif
+  serif: ["Times New Roman"]
+  weight: bold
+  axes_label_weight: bold
+  axes_title_weight: bold
+
+svg:
+  fonttype: none
+
+sizes_pt:
+  title: 9
+  axis_label: 8
+  tick: 7
+  legend: 7
+  annotation: 6
+  panel_letter: 10
+
+lines:
+  line_width: 1.0
+  axis_spine_width: 0.8
+  tick_length: 3
+  tick_width: 0.8
+
+figure_widths_mm:
+  one_col: 89
+  one_and_half_col: 120
+  two_col: 183
+default_panel_height_mm: 60
+
+palette:
+  nature:
+    - "#E64B35"
+    - "#4DBBD5"
+    - "#00A087"
+    - "#3C5488"
+    - "#F39B7F"
+    - "#8491B4"
+    - "#91D1C2"
+    - "#DC0000"
+    - "#7E6148"
+    - "#B09C85"
+  diverging_cmap: RdBu_r
+  sequential_cmap: viridis
+
+despine:
+  top: true
+  right: true
+  left: false
+  bottom: false
+
+panel_letter:
+  weight: bold
+  size_pt: 10
+  x_offset: -0.12
+  y_offset: 1.05

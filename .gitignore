@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Artifacts tracked by DVC, not git (keep the directory marker only)
+artifacts/*
+!artifacts/.gitkeep
+
+# Local agent / IDE caches
+.claude/
+
+# Large data / DB
+*.db
+*.sqlite
+*.sqlite3
+*.parquet
+*.npz
+*.joblib
+*.pt
+*.pth
+
+# MLflow / Optuna
+mlruns/
+*.optuna.db
+
+# DVC
+/.dvc/tmp
+/.dvc/cache
+
+# OS
+.DS_Store
+Thumbs.db

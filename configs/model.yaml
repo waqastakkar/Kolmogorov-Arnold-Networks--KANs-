@@ -1,0 +1,18 @@
+# KAN + baseline model search-space wiring. Concrete numeric ranges populated in Stage 5/6.
+defaults:
+  - _self_
+
+params_file: ../params.yaml
+group: model
+
+kan_search_space:
+  layer_widths_choices: [[64, 1], [128, 1], [128, 64, 1], [256, 64, 1]]
+  grid: ${kan.grid_schedule}
+  spline_order: ${kan.spline_order}
+  lamb: { low: 1.0e-5, high: 1.0e-1, log: true }
+  lamb_entropy: { low: 0.1, high: 5.0, log: true }
+  lr: { low: 1.0e-4, high: 1.0e-2, log: true }
+  weight_decay: { low: 1.0e-6, high: 1.0e-2, log: true }
+  dropout: { low: 0.0, high: 0.3 }
+  batch_size_choices: [32, 64, 128, 256]
+  optimizer_choices: [adamw, lbfgs]

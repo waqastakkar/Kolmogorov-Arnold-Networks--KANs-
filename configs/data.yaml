@@ -1,0 +1,7 @@
+# Stage 1-3 (extract / curate / split) config.
+# Hyperparameters live in params.yaml; this file holds Hydra-level wiring only.
+defaults:
+  - _self_
+
+params_file: ../params.yaml
+group: data

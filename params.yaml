@@ -1,0 +1,127 @@
+# Single source of truth for every hyperparameter, path, threshold and seed.
+# Code reads this via Hydra/Pydantic. No magic numbers in code.
+
+seed: 42
+
+paths:
+  raw_data: artifacts/data/raw
+  interim: artifacts/data/interim
+  processed: artifacts/data/processed
+  splits: artifacts/data/splits
+  models: artifacts/models
+  kan_models: artifacts/models/kan
+  baseline_models: artifacts/models/baselines
+  optuna: artifacts/optuna
+  mlflow: artifacts/mlflow
+  reports: artifacts/reports
+  metrics: artifacts/reports/metrics
+  shap: artifacts/reports/shap
+  symbolic: artifacts/reports/symbolic
+  figures: artifacts/figures/svg
+  screening: artifacts/screening
+  library: artifacts/screening/library
+  predictions: artifacts/screening/predictions
+  top_hits: artifacts/screening/top_hits
+
+chembl:
+  db_env_var: CHEMBL_DB_PATH
+  target_chembl_id: CHEMBL1163125
+  assay_type: B          # binding
+  min_confidence_score: 8
+  allowed_standard_types: [IC50, Ki, Kd]
+  required_units: nM
+  required_relation: "="
+  require_pchembl: true
+
+curate:
+  mw_min: 150.0
+  mw_max: 700.0
+  min_heavy_atoms: 10
+  reject_inorganic: true
+  reject_mixtures: true
+  replicate_sigma_threshold: 0.5
+  pains_flag_keep: true
+  active_pchembl_threshold: 6.5
+
+split:
+  scaffold:
+    train_frac: 0.80
+    val_frac: 0.10
+    test_frac: 0.10
+    include_chirality: false
+  time:
+    year_field: first_publication_year
+    test_year_quantile: 0.9
+
+featurize:
+  morgan:
+    radius: 2
+    n_bits: 2048
+    use_features: false
+    use_chirality: false
+  mordred:
+    ignore_3d: true
+    variance_threshold: 0.0
+    correlation_threshold: 0.95
+    nan_policy: drop
+  graphs:
+    atom_messages: false
+
+baselines:
+  optuna_trials: 100
+  cv_folds: 5
+  n_seeds: 5
+  models: [rf, xgboost, svr, chemprop, mlp]
+
+kan:
+  backbone: efficient-kan
+  grid_schedule: [3, 5, 10, 20]
+  spline_order: 3
+  learnable_base: true
+  learnable_spline_scale: true
+  multiplicative_nodes: true
+  dropout: 0.1
+  aux_classification_head: true
+  aux_active_threshold: 6.5
+  lamb: 0.001
+  lamb_entropy: 2.0
+  lamb_coef: 0.0
+  ensemble_size: 5
+  mc_dropout_samples: 50
+  optuna_trials: 200
+  optuna_directions: [minimize, maximize]   # (RMSE, sparsity)
+  pruner: hyperband
+  cv_folds: 5
+  n_seeds: 5
+  early_stopping_patience: 20
+  grad_clip: 1.0
+  lr_schedule: cosine
+
+conformal:
+  alpha: 0.1
+  strategy: mondrian
+  partition_by: scaffold
+
+symbolic:
+  edge_importance_threshold: 0.01
+  candidate_functions: [poly, exp, log, sin, sigmoid, sqrt]
+
+evaluate:
+  bootstrap_iters: 1000
+  ad_method: tanimoto_kde
+  tanimoto_radius: 2
+  tanimoto_nbits: 2048
+
+screen:
+  default_top_n: 500
+  ro5_enforce: true
+  qed_min: 0.5
+  pains_filter: true
+  cluster_cutoff: 0.6
+  diversity_selection: butina
+  embed_algorithm: ETKDGv3
+  ff: MMFF94s
+  ff_max_iters: 500
+
+report:
+  output: artifacts/reports/report.html

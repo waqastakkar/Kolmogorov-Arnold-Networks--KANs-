@@ -1,0 +1,189 @@
+# DVC pipeline definition. One stage per PLAN.md §2 step (1-10).
+stages:
+
+  extract:
+    cmd: python scripts/01_extract.py
+    deps:
+      - scripts/01_extract.py
+      - src/brd4kan/data/extract.py
+      - src/brd4kan/utils
+      - params.yaml
+    params:
+      - chembl
+      - paths.raw_data
+      - seed
+    outs:
+      - artifacts/data/raw/brd4_raw.parquet
+
+  curate:
+    cmd: python scripts/02_curate.py
+    deps:
+      - scripts/02_curate.py
+      - src/brd4kan/data/curate.py
+      - src/brd4kan/utils
+      - artifacts/data/raw/brd4_raw.parquet
+    params:
+      - curate
+      - paths.processed
+      - seed
+    outs:
+      - artifacts/data/processed/brd4_curated.parquet
+
+  split:
+    cmd: python scripts/03_split.py
+    deps:
+      - scripts/03_split.py
+      - src/brd4kan/data/split.py
+      - src/brd4kan/utils
+      - artifacts/data/processed/brd4_curated.parquet
+    params:
+      - split
+      - paths.splits
+      - seed
+    outs:
+      - artifacts/data/splits/scaffold_split.json
+      - artifacts/data/splits/time_split.json
+
+  featurize:
+    cmd: python scripts/04_featurize.py
+    deps:
+      - scripts/04_featurize.py
+      - src/brd4kan/features
+      - src/brd4kan/utils
+      - artifacts/data/processed/brd4_curated.parquet
+      - artifacts/data/splits/scaffold_split.json
+    params:
+      - featurize
+      - paths.processed
+      - seed
+    outs:
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+      - artifacts/data/processed/mordred_scaler.joblib
+      - artifacts/data/processed/chemprop.csv
+
+  baselines:
+    cmd: python scripts/05_baselines.py
+    deps:
+      - scripts/05_baselines.py
+      - src/brd4kan/models/baselines.py
+      - src/brd4kan/models/chemprop_wrapper.py
+      - src/brd4kan/train
+      - src/brd4kan/utils
+      - artifacts/data/processed/brd4_curated.parquet
+      - artifacts/data/splits/scaffold_split.json
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+    params:
+      - baselines
+      - curate.active_pchembl_threshold
+      - paths.baseline_models
+      - paths.mlflow
+      - seed
+    outs:
+      - artifacts/models/baselines/baselines_summary.json
+
+  kan:
+    cmd: python scripts/06_train_kan.py
+    deps:
+      - scripts/06_train_kan.py
+      - src/brd4kan/models/kan_model.py
+      - src/brd4kan/models/conformal.py
+      - src/brd4kan/train/train_kan.py
+      - src/brd4kan/train/run_kan.py
+      - src/brd4kan/train/cv.py
+      - src/brd4kan/utils
+      - artifacts/data/processed/brd4_curated.parquet
+      - artifacts/data/splits/scaffold_split.json
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+    params:
+      - kan
+      - conformal
+      - curate.active_pchembl_threshold
+      - paths.kan_models
+      - paths.mlflow
+      - seed
+    outs:
+      - artifacts/models/kan/kan_summary.json
+
+  symbolic:
+    cmd: python scripts/07_symbolic.py
+    deps:
+      - scripts/07_symbolic.py
+      - src/brd4kan/explain/symbolic.py
+      - src/brd4kan/utils
+      - artifacts/models/kan/kan_summary.json
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+    params:
+      - symbolic
+      - paths.symbolic
+      - seed
+    outs:
+      - artifacts/reports/symbolic/pIC50_equation.tex
+      - artifacts/reports/symbolic/pIC50_equation.pkl
+      - artifacts/reports/symbolic/descriptor_importance.json
+
+  evaluate:
+    cmd: python scripts/08_evaluate.py
+    deps:
+      - scripts/08_evaluate.py
+      - src/brd4kan/train/run_evaluate.py
+      - src/brd4kan/train/bootstrap.py
+      - src/brd4kan/train/applicability.py
+      - src/brd4kan/explain/shap_analysis.py
+      - src/brd4kan/viz/figures.py
+      - src/brd4kan/utils
+      - artifacts/data/processed/brd4_curated.parquet
+      - artifacts/data/splits/scaffold_split.json
+      - artifacts/data/splits/time_split.json
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+      - artifacts/models/baselines/baselines_summary.json
+      - artifacts/models/kan/kan_summary.json
+      - artifacts/reports/symbolic/descriptor_importance.json
+    params:
+      - evaluate
+      - curate.active_pchembl_threshold
+      - paths.figures
+      - paths.metrics
+      - seed
+    outs:
+      - artifacts/reports/metrics/evaluation_metrics.json
+      - artifacts/reports/metrics/ad_scores.json
+
+  screen:
+    cmd: python scripts/09_screen.py
+    deps:
+      - scripts/09_screen.py
+      - src/brd4kan/screen/screening.py
+      - src/brd4kan/utils
+      - artifacts/data/processed/morgan.npz
+      - artifacts/data/processed/mordred.npz
+      - artifacts/data/processed/mordred_scaler.joblib
+      - artifacts/models/kan/kan_summary.json
+    params:
+      - screen
+      - paths.screening
+      - paths.predictions
+      - seed
+    outs:
+      - artifacts/screening/predictions/top_hits.csv
+      - artifacts/screening/predictions/top_hits.sdf
+
+  analyze_hits:
+    cmd: python scripts/10_analyze_hits.py
+    deps:
+      - scripts/10_analyze_hits.py
+      - src/brd4kan/screen/analyze_hits.py
+      - src/brd4kan/utils
+      - artifacts/screening/predictions/top_hits.csv
+      - artifacts/data/processed/brd4_curated.parquet
+    params:
+      - screen
+      - paths.top_hits
+      - seed
+    outs:
+      - artifacts/screening/top_hits/annotated_hits.csv
+      - artifacts/screening/top_hits/hit_cards.svg

@@ -1,0 +1,9 @@
+# Stage 9/10 wiring. Numeric thresholds live in params.yaml.
+defaults:
+  - _self_
+
+params_file: ../params.yaml
+group: screen
+
+require_library: true
+default_library_path: null

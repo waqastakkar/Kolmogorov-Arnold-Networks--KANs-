@@ -1,0 +1,11 @@
+# Training-runtime knobs. Numeric hyperparameters live in params.yaml.
+defaults:
+  - _self_
+
+params_file: ../params.yaml
+group: train
+
+device: auto                  # auto | cpu | cuda
+deterministic_env_var: BRD4KAN_DETERMINISTIC
+mlflow_tracking_uri: file:./artifacts/mlflow
+optuna_storage_template: sqlite:///artifacts/optuna/{model}.db
